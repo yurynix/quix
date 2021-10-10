@@ -1,13 +1,13 @@
 import { TokensMap } from './tokensMap';
-import antlr4 from 'antlr4';
-import { SqlBaseLexer } from '../../presto-grammar';
+import { SqlBaseLexer } from '../../presto-grammar-ts';
 import { last, mapValues } from 'lodash';
 import { CommonToken } from '../types/index';
+import { CharStreams, CommonTokenStream } from 'antlr4ts';
 
 export const createTokenizer = (input: string) => {
-  const stream = new antlr4.InputStream(input);
+  const stream = CharStreams.fromString(input);
   const lexer = new SqlBaseLexer(stream);
-  const tokenizer = new antlr4.CommonTokenStream(lexer);
+  const tokenizer = new CommonTokenStream(lexer);
   return tokenizer;
 };
 

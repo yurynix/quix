@@ -1,4 +1,5 @@
-import antlr4 from 'antlr4';
+import { CommonToken } from 'antlr4ts';
+import { ANTLRErrorListener } from 'antlr4ts/ANTLRErrorListener';
 
 export interface IErrorAnnotation {
   row: number;
@@ -7,17 +8,24 @@ export interface IErrorAnnotation {
   type: string;
 }
 
-export class PrestoErrorListener extends antlr4.error.ErrorListener {
+export class PrestoErrorListener implements ANTLRErrorListener<CommonToken> {
   private readonly annotations: IErrorAnnotation[] = [];
 
   getErrors = () => this.annotations;
 
-  syntaxError(recognizer, offendingSymbol, line, column, msg, e) {
+  syntaxError(
+    recognizer: any,
+    offendingSymbol: any,
+    line: number,
+    charPositionInLine: number,
+    msg: string,
+    e: any
+  ) {
     this.annotations.push({
       row: line - 1,
-      column,
+      column: charPositionInLine,
       text: msg,
-      type: 'error'
+      type: 'error',
     });
   }
 }
