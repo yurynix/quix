@@ -1,3 +1,4 @@
+import { NamedQueryContext } from '../../language-parsers/presto-grammar-ts/lang/presto/SqlBaseParser';
 import {
   aggregateQueryDetailsAndTableInfo,
   getQueryDetailsFromQuerySpecificationNode,
@@ -7,7 +8,9 @@ import {
 import { QueryDetails, TableInfo, TableType } from './types';
 import { createNewTableInfoObj } from './utils';
 
-export const analyzeNamedQueryNode = (namedQueryNode: any): TableInfo => {
+export const analyzeNamedQueryNode = (
+  namedQueryNode: NamedQueryContext
+): TableInfo => {
   const currentTableInfo: TableInfo = createNewTableInfoObj({
     name: getWithClauseName(namedQueryNode),
     type: TableType.Nested,
@@ -25,20 +28,18 @@ export const analyzeNamedQueryNode = (namedQueryNode: any): TableInfo => {
   return currentTableInfo;
 };
 
-const getWithClauseName = (namedQueryNode: any): string => {
-  return namedQueryNode.identifier().getText();
+const getWithClauseName = (namedQueryNode: NamedQueryContext): string => {
+  return namedQueryNode.identifier().text;
 };
 
-const getColumnAliases = (namedQueryNode: any): string[] => {
+const getColumnAliases = (namedQueryNode: NamedQueryContext): string[] => {
   const columnsAlias: string[] = [];
 
   if (namedQueryNode.columnAliases) {
     namedQueryNode
       .columnAliases()
       ?.identifier()
-      ?.forEach((identifier: any) => {
-        columnsAlias.push(identifier.getText());
-      });
+      ?.forEach((identifier) => columnsAlias.push(identifier.text));
   }
 
   return columnsAlias;

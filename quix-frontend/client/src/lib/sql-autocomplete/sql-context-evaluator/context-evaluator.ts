@@ -1,9 +1,10 @@
-import * as antlr4 from 'antlr4';
+import { ParseTreeWalker } from 'antlr4ts/tree/ParseTreeWalker';
 import { PrestoContextListener } from './presto-context-listener';
 import { ContextType, QueryContext, TableInfo } from './types';
 import { getTableInfoFromRelationNode } from './tree-analyzer';
 import { analyzeNamedQueryNode } from './with-clause-analyzer';
 import { createPrestoSyntaxTree } from '../../language-parsers/sql-parser/parser';
+import { MultiStatementContext, NamedQueryContext } from '../../language-parsers/presto-grammar-ts/lang/presto/SqlBaseParser';
 
 export const evaluateContext = (
   input: string,
@@ -14,18 +15,20 @@ export const evaluateContext = (
 };
 
 const getContextFromSyntaxTree = (
-  tree: any,
+  tree: MultiStatementContext,
   identifier: string
 ): QueryContext => {
   const prestoContextListener = new PrestoContextListener();
   prestoContextListener.setIdentifier(identifier);
-  antlr4.tree.ParseTreeWalker.DEFAULT.walk(prestoContextListener, tree);
+  ParseTreeWalker.DEFAULT.walk(prestoContextListener, tree);
 
   const contextType = prestoContextListener.getContextType();
 
   const queryTables: TableInfo[] =
     contextType === ContextType.Column
-      ? evaluateQueryTablesInfo(prestoContextListener.getQuerySpecificationNode())
+      ? evaluateQueryTablesInfo(
+          prestoContextListener.getQuerySpecificationNode()
+        )
       : [];
 
   const withTablesInfo: TableInfo[] = evaluateWithTablesInfo(
@@ -54,8 +57,8 @@ const evaluateQueryTablesInfo = (querySpecificationNode: any): TableInfo[] => {
     }, []);
 };
 
-const evaluateWithTablesInfo = (namedQueries: any[]): TableInfo[] => {
-  return namedQueries.reduce((accumulator: TableInfo[], withNode: any) => {
+const evaluateWithTablesInfo = (namedQueries: NamedQueryContext[]): TableInfo[] => {
+  return namedQueries.reduce((accumulator: TableInfo[], withNode) => {
     return accumulator.concat(analyzeNamedQueryNode(withNode));
   }, []);
 };

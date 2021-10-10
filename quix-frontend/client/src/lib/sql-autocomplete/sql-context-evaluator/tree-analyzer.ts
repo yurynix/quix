@@ -1,3 +1,10 @@
+import { ParserRuleContext } from 'antlr4ts';
+import {
+  QuerySpecificationContext,
+  SelectAllContext,
+  SelectItemContext,
+  SelectSingleContext,
+} from '../../language-parsers/presto-grammar-ts/lang/presto/SqlBaseParser';
 import { QueryDetails, TableInfo, TableType } from './types';
 import { createNewTableInfoObj } from './utils';
 
@@ -23,11 +30,10 @@ export const getTableInfoFromRelationNode = (
   const currentTableInfo: TableInfo = createNewTableInfoObj({
     name:
       relationPrimaryNode.qualifiedName &&
-      relationPrimaryNode.qualifiedName()?.getText(),
+      relationPrimaryNode.qualifiedName()?.text,
     type: relationPrimaryNode.query ? TableType.Nested : TableType.External,
     alias:
-      aliasedRelationNode.identifier &&
-      aliasedRelationNode.identifier()?.getText(),
+      aliasedRelationNode.identifier && aliasedRelationNode.identifier()?.text,
   });
 
   if (currentTableInfo.type === TableType.Nested && relationPrimaryNode.query) {
@@ -41,7 +47,7 @@ export const getTableInfoFromRelationNode = (
 };
 
 export const getQueryDetailsFromQuerySpecificationNode = (
-  querySpecificationNode: any
+  querySpecificationNode: QuerySpecificationContext
 ): QueryDetails => {
   const tables: TableInfo[] = [];
   const columns: string[] = [];
@@ -49,19 +55,21 @@ export const getQueryDetailsFromQuerySpecificationNode = (
 
   querySpecificationNode
     ?.selectItem()
-    .forEach((selectItem: any) =>
-      selectItem.ASTERISK
-        ? (selectAll = true)
-        : columns.push(
-            selectItem.identifier()
-              ? selectItem.identifier().getText()
-              : selectItem.getText()
-          )
-    );
+    .forEach((selectItem: SelectItemContext) => {
+      if (selectItem instanceof SelectAllContext) {
+        selectAll = true;
+      } else if (selectItem instanceof SelectSingleContext) {
+        columns.push(
+          selectItem.identifier()
+            ? selectItem.identifier().text
+            : selectItem.text
+        );
+      }
+    });
 
   querySpecificationNode
     ?.relation()
-    .forEach((relation: any) =>
+    .forEach((relation) =>
       tables.push(...getTableInfoFromRelationNode(relation))
     );
 
@@ -88,7 +96,7 @@ export const aggregateQueryDetailsAndTableInfo = (
   tableInfo.columns.push(...queryDetails.columns);
 };
 
-export const getNextQuerySpecificationNode = (currentNode: any) => {
+export const getNextQuerySpecificationNode = (currentNode: ParserRuleContext) : QuerySpecificationContext => {
   if (!(currentNode?.children?.length > 0)) {
     return null;
   }
