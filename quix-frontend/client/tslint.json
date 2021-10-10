@@ -1,7 +1,10 @@
 {
   "extends": ["tslint-config-yoshi-base"],
   "linterOptions": {
-    "exclude": ["./src/lib/language-parsers/presto-grammar/lang/presto/*.ts"]
+    "exclude": [
+      "./src/lib/language-parsers/presto-grammar/lang/presto/*.ts",
+      "./src/lib/language-parsers/presto-grammar-ts/lang/presto/*.ts"
+    ]
   },
   "rules": {
     "prettier": false,
